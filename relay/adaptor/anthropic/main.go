@@ -88,6 +88,8 @@ func ConvertRequest(textRequest model.GeneralOpenAIRequest) *Request {
 	} else if claudeRequest.Model == "claude-2" {
 		claudeRequest.Model = "claude-2.1"
 	}
+
+	isLastToolRole := false
 	for _, message := range textRequest.Messages {
 		if message.Role == "system" && claudeRequest.System == "" {
 			claudeRequest.System = message.StringContent()
@@ -100,14 +102,22 @@ func ConvertRequest(textRequest model.GeneralOpenAIRequest) *Request {
 		if message.IsStringContent() {
 			content.Type = "text"
 			content.Text = message.StringContent()
-			if message.Role == "tool" {
+
+			isToolRole := message.Role == "tool"
+			if isToolRole {
 				claudeMessage.Role = "user"
 				content.Type = "tool_result"
 				content.Content = content.Text
 				content.Text = ""
 				content.ToolUseId = message.ToolCallId
+				if isLastToolRole {
+					claudeRequest.Messages[len(claudeRequest.Messages)-1].Content = append(claudeRequest.Messages[len(claudeRequest.Messages)-1].Content, content)
+				} else {
+					claudeMessage.Content = append(claudeMessage.Content, content)
+				}
+			} else {
+				claudeMessage.Content = append(claudeMessage.Content, content)
 			}
-			claudeMessage.Content = append(claudeMessage.Content, content)
 			for i := range message.ToolCalls {
 				inputParam := make(map[string]any)
 				_ = json.Unmarshal([]byte(message.ToolCalls[i].Function.Arguments.(string)), &inputParam)
@@ -118,7 +128,10 @@ func ConvertRequest(textRequest model.GeneralOpenAIRequest) *Request {
 					Input: inputParam,
 				})
 			}
-			claudeRequest.Messages = append(claudeRequest.Messages, claudeMessage)
+			if !isLastToolRole || !isToolRole {
+				claudeRequest.Messages = append(claudeRequest.Messages, claudeMessage)
+			}
+			isLastToolRole = isToolRole
 			continue
 		}
 		var contents []Content
@@ -141,6 +154,7 @@ func ConvertRequest(textRequest model.GeneralOpenAIRequest) *Request {
 		}
 		claudeMessage.Content = contents
 		claudeRequest.Messages = append(claudeRequest.Messages, claudeMessage)
+		isLastToolRole = false
 	}
 	return &claudeRequest
 }
