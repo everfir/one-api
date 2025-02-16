@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	claude "github.com/songquanpeng/one-api/relay/adaptor/aws/claude"
 	llama3 "github.com/songquanpeng/one-api/relay/adaptor/aws/llama3"
 	"github.com/songquanpeng/one-api/relay/adaptor/aws/utils"
@@ -28,6 +29,7 @@ func init() {
 
 func GetAdaptor(model string) utils.AwsAdapter {
 	adaptorType := adaptors[model]
+	fmt.Printf("[GetAdaptor] adaptorType lpf: ", adaptorType)
 	switch adaptorType {
 	case AwsClaude:
 		return &claude.Adaptor{}

@@ -66,6 +66,7 @@ func CreateRootAccountIfNeed() error {
 
 func chooseDB(envName string) (*gorm.DB, error) {
 	dsn := os.Getenv(envName)
+	fmt.Println("dsn lpf", dsn)
 
 	switch {
 	case strings.HasPrefix(dsn, "postgres://"):

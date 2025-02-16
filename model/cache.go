@@ -32,12 +32,20 @@ func CacheGetTokenByKey(key string) (*Token, error) {
 	}
 	var token Token
 	if !common.RedisEnabled {
+		fmt.Printf("key lpf", key)
 		err := DB.Where(keyCol+" = ?", key).First(&token).Error
+		fmt.Printf("token lpf", token)
+		if err != nil {
+			fmt.Printf("err lpf", err.Error())
+		}
 		return &token, err
 	}
+	fmt.Printf("key1 lpf", key)
 	tokenObjectString, err := common.RedisGet(fmt.Sprintf("token:%s", key))
 	if err != nil {
+		print("key2 lpf", key)
 		err := DB.Where(keyCol+" = ?", key).First(&token).Error
+		fmt.Printf("token lpf", token)
 		if err != nil {
 			return nil, err
 		}
@@ -45,10 +53,12 @@ func CacheGetTokenByKey(key string) (*Token, error) {
 		if err != nil {
 			return nil, err
 		}
+		fmt.Printf("jsonBytes lpf", jsonBytes)
 		err = common.RedisSet(fmt.Sprintf("token:%s", key), string(jsonBytes), time.Duration(TokenCacheSeconds)*time.Second)
 		if err != nil {
 			logger.SysError("Redis set token error: " + err.Error())
 		}
+		fmt.Printf("err lpf", err)
 		return &token, nil
 	}
 	err = json.Unmarshal([]byte(tokenObjectString), &token)

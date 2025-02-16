@@ -102,11 +102,13 @@ func getRequestBody(c *gin.Context, meta *meta.Meta, textRequest *model.GeneralO
 	convertedRequest, err := adaptor.ConvertRequest(c, meta.Mode, textRequest)
 	if err != nil {
 		logger.Debugf(c.Request.Context(), "converted request failed: %s\n", err.Error())
+		fmt.Printf("converted request failed:", err.Error())
 		return nil, err
 	}
 	jsonData, err := json.Marshal(convertedRequest)
 	if err != nil {
 		logger.Debugf(c.Request.Context(), "converted request json_marshal_failed: %s\n", err.Error())
+		fmt.Printf("converted request json_marshal_failed:", err.Error())
 		return nil, err
 	}
 	logger.Debugf(c.Request.Context(), "converted request: \n%s", string(jsonData))

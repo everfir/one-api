@@ -100,6 +100,18 @@ func ConvertRequest(textRequest model.GeneralOpenAIRequest) *Request {
 		if message.IsStringContent() {
 			content.Type = "text"
 			content.Text = message.StringContent()
+			// 添加prompt cache功能
+			if message.PromptCacheType != "" {
+				fmt.Printf("message.PromptCacheType lpf", message.PromptCacheType)
+				content.CacheControl = CacheControl{
+					Type: message.PromptCacheType,
+				}
+			}
+
+			content.CacheControl = CacheControl{
+				Type: "ephemeral",
+			}
+
 			if message.Role == "tool" {
 				claudeMessage.Role = "user"
 				content.Type = "tool_result"
@@ -142,6 +154,7 @@ func ConvertRequest(textRequest model.GeneralOpenAIRequest) *Request {
 		claudeMessage.Content = contents
 		claudeRequest.Messages = append(claudeRequest.Messages, claudeMessage)
 	}
+	fmt.Printf("claudeRequest: %+v\n", claudeRequest)
 	return &claudeRequest
 }
 
