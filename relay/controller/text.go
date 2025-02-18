@@ -66,13 +66,11 @@ func RelayTextHelper(c *gin.Context) *model.ErrorWithStatusCode {
 	}
 
 	// do request
-	llmStartTime := time.Now()
+	startTime := time.Now()
 	resp, err := adaptor.DoRequest(c, meta, requestBody)
-	llmDuration := time.Since(llmStartTime)
-	logger.Infof(ctx, "LLM request completed, model: %s, duration: %v", meta.ActualModelName, llmDuration)
 
 	if err != nil {
-		logger.Errorf(ctx, "DoRequest failed: %s, duration: %v", err.Error(), llmDuration)
+		logger.Errorf(ctx, "DoRequest failed: %s", err.Error())
 		return openai.ErrorWrapper(err, "do_request_failed", http.StatusInternalServerError)
 	}
 	if isErrorHappened(meta, resp) {
@@ -82,6 +80,9 @@ func RelayTextHelper(c *gin.Context) *model.ErrorWithStatusCode {
 
 	// do response
 	usage, respErr := adaptor.DoResponse(c, resp, meta)
+	timeCost := time.Since(startTime)
+	logger.Infof(ctx, "LLM request completed, model: %s, duration: %v", meta.ActualModelName, timeCost)
+
 	if respErr != nil {
 		logger.Errorf(ctx, "respErr is not nil: %+v", respErr)
 		billing.ReturnPreConsumedQuota(ctx, preConsumedQuota, meta.TokenId)
