@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/songquanpeng/one-api/common/config"
 	"io"
 	"net/http"
+	"time"
+
+	"github.com/songquanpeng/one-api/common/config"
 
 	"github.com/gin-gonic/gin"
 	"github.com/songquanpeng/one-api/common/logger"
@@ -64,9 +66,13 @@ func RelayTextHelper(c *gin.Context) *model.ErrorWithStatusCode {
 	}
 
 	// do request
+	llmStartTime := time.Now()
 	resp, err := adaptor.DoRequest(c, meta, requestBody)
+	llmDuration := time.Since(llmStartTime)
+	logger.Infof(ctx, "LLM request completed, model: %s, duration: %v", meta.ActualModelName, llmDuration)
+
 	if err != nil {
-		logger.Errorf(ctx, "DoRequest failed: %s", err.Error())
+		logger.Errorf(ctx, "DoRequest failed: %s, duration: %v", err.Error(), llmDuration)
 		return openai.ErrorWrapper(err, "do_request_failed", http.StatusInternalServerError)
 	}
 	if isErrorHappened(meta, resp) {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/songquanpeng/one-api/common"
@@ -43,6 +44,7 @@ func relayHelper(c *gin.Context, relayMode int) *model.ErrorWithStatusCode {
 }
 
 func Relay(c *gin.Context) {
+	startTime := time.Now()
 	ctx := c.Request.Context()
 	relayMode := relaymode.GetByPath(c.Request.URL.Path)
 	if config.DebugEnabled {
@@ -54,6 +56,7 @@ func Relay(c *gin.Context) {
 	bizErr := relayHelper(c, relayMode)
 	if bizErr == nil {
 		monitor.Emit(channelId, true)
+		logger.Infof(ctx, "relay completed successfully, total time: %v", time.Since(startTime))
 		return
 	}
 	lastFailedChannelId := channelId
@@ -82,6 +85,7 @@ func Relay(c *gin.Context) {
 		c.Request.Body = io.NopCloser(bytes.NewBuffer(requestBody))
 		bizErr = relayHelper(c, relayMode)
 		if bizErr == nil {
+			logger.Infof(ctx, "relay retry successfully, total time: %v", time.Since(startTime))
 			return
 		}
 		channelId := c.GetInt(ctxkey.ChannelId)
@@ -97,6 +101,7 @@ func Relay(c *gin.Context) {
 
 		// BUG: bizErr is in race condition
 		bizErr.Error.Message = helper.MessageWithRequestId(bizErr.Error.Message, requestId)
+		logger.Errorf(ctx, "request failed with error: %s, total time: %v", bizErr.Error.Message, time.Since(startTime))
 		c.JSON(bizErr.StatusCode, gin.H{
 			"error": bizErr.Error,
 		})
