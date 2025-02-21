@@ -7,6 +7,7 @@ type Message struct {
 	Name             *string `json:"name,omitempty"`
 	ToolCalls        []Tool  `json:"tool_calls,omitempty"`
 	ToolCallId       string  `json:"tool_call_id,omitempty"`
+	PromptCacheType  string  `json:"prompt_cache_type,omitempty"`
 }
 
 func (m Message) IsStringContent() bool {

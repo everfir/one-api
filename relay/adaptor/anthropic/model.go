@@ -22,6 +22,13 @@ type Content struct {
 	Input     any    `json:"input,omitempty"`
 	Content   string `json:"content,omitempty"`
 	ToolUseId string `json:"tool_use_id,omitempty"`
+
+	// prompt cache
+	CacheControl CacheControl `json:"cache_control,omitempty"`
+}
+
+type CacheControl struct {
+	Type string `json:"type"`
 }
 
 type Message struct {

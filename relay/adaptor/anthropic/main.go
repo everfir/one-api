@@ -2,6 +2,7 @@ package anthropic
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/songquanpeng/one-api/common/render"
@@ -91,6 +92,7 @@ func ConvertRequest(textRequest model.GeneralOpenAIRequest) *Request {
 	for _, message := range textRequest.Messages {
 		if message.Role == "system" && claudeRequest.System == "" {
 			claudeRequest.System = message.StringContent()
+			logger.Info(context.Background(), "system message: "+claudeRequest.System)
 			continue
 		}
 		claudeMessage := Message{
@@ -100,6 +102,15 @@ func ConvertRequest(textRequest model.GeneralOpenAIRequest) *Request {
 		if message.IsStringContent() {
 			content.Type = "text"
 			content.Text = message.StringContent()
+			// 添加prompt cache功能
+			logger.Info(context.Background(), fmt.Sprintf("prompt cache type: %s", message.PromptCacheType))
+			if message.PromptCacheType != "" {
+				content.CacheControl = CacheControl{
+					Type: message.PromptCacheType,
+				}
+			}
+			jsonData, _ := json.Marshal(message)
+			logger.Info(context.Background(), fmt.Sprintf("message: %s", jsonData))
 			if message.Role == "tool" {
 				claudeMessage.Role = "user"
 				content.Type = "tool_result"
