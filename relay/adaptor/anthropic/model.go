@@ -22,6 +22,12 @@ type Content struct {
 	Input     any    `json:"input,omitempty"`
 	Content   string `json:"content,omitempty"`
 	ToolUseId string `json:"tool_use_id,omitempty"`
+	// prompt cache
+	CacheControl *CacheControl `json:"cache_control,omitempty"`
+}
+
+type CacheControl struct {
+	Type string `json:"type,omitempty"`
 }
 
 type Message struct {
@@ -44,7 +50,7 @@ type InputSchema struct {
 type Request struct {
 	Model         string    `json:"model"`
 	Messages      []Message `json:"messages"`
-	System        string    `json:"system,omitempty"`
+	System        Content   `json:"system,omitempty"`
 	MaxTokens     int       `json:"max_tokens,omitempty"`
 	StopSequences []string  `json:"stop_sequences,omitempty"`
 	Stream        bool      `json:"stream,omitempty"`

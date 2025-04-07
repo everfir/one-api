@@ -2,6 +2,7 @@ package aws
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockruntime"
 	"github.com/gin-gonic/gin"
+	"github.com/songquanpeng/one-api/common/logger"
 	"github.com/songquanpeng/one-api/relay/adaptor"
 	"github.com/songquanpeng/one-api/relay/adaptor/aws/utils"
 	"github.com/songquanpeng/one-api/relay/meta"
@@ -39,6 +41,7 @@ func (a *Adaptor) ConvertRequest(c *gin.Context, relayMode int, request *model.G
 
 	adaptor := GetAdaptor(request.Model)
 	if adaptor == nil {
+		logger.Info(c.Request.Context(), fmt.Sprintf("[GetAdaptor] failed, model %s not supported", request.Model))
 		return nil, errors.New("adaptor not found")
 	}
 

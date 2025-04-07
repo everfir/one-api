@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/songquanpeng/one-api/common/logger"
 	"github.com/songquanpeng/one-api/relay/adaptor"
 	channelhelper "github.com/songquanpeng/one-api/relay/adaptor"
 	"github.com/songquanpeng/one-api/relay/meta"
@@ -31,6 +32,7 @@ func (a *Adaptor) ConvertRequest(c *gin.Context, relayMode int, request *model.G
 
 	adaptor := GetAdaptor(request.Model)
 	if adaptor == nil {
+		logger.Info(c.Request.Context(), fmt.Sprintf("[GetAdaptor] failed, model %s not supported", request.Model))
 		return nil, errors.New("adaptor not found")
 	}
 
@@ -40,6 +42,7 @@ func (a *Adaptor) ConvertRequest(c *gin.Context, relayMode int, request *model.G
 func (a *Adaptor) DoResponse(c *gin.Context, resp *http.Response, meta *meta.Meta) (usage *model.Usage, err *model.ErrorWithStatusCode) {
 	adaptor := GetAdaptor(meta.ActualModelName)
 	if adaptor == nil {
+		logger.Info(c.Request.Context(), fmt.Sprintf("[GetAdaptor] failed, model %s not supported", meta.ActualModelName))
 		return nil, &relaymodel.ErrorWithStatusCode{
 			StatusCode: http.StatusInternalServerError,
 			Error: relaymodel.Error{

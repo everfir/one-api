@@ -10,4 +10,9 @@ var ModelList = []string{
 	"claude-3-5-sonnet-20240620",
 	"claude-3-5-sonnet-20241022",
 	"claude-3-5-sonnet-latest",
+	"claude-3-7-sonnet-20250219",
+}
+
+var ModelCacheControlMap = map[string]bool{
+	"claude-3-7-sonnet-20250219": true,
 }
