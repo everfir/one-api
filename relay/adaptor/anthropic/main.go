@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/songquanpeng/one-api/common/render"
 	"io"
 	"net/http"
 	"strings"
@@ -14,6 +13,7 @@ import (
 	"github.com/songquanpeng/one-api/common/helper"
 	"github.com/songquanpeng/one-api/common/image"
 	"github.com/songquanpeng/one-api/common/logger"
+	"github.com/songquanpeng/one-api/common/render"
 	"github.com/songquanpeng/one-api/relay/adaptor/openai"
 	"github.com/songquanpeng/one-api/relay/model"
 )
@@ -89,8 +89,14 @@ func ConvertRequest(textRequest model.GeneralOpenAIRequest) *Request {
 		claudeRequest.Model = "claude-2.1"
 	}
 	for _, message := range textRequest.Messages {
-		if message.Role == "system" && claudeRequest.System == "" {
-			claudeRequest.System = message.StringContent()
+		if message.Role == "system" && claudeRequest.System.Type == "" {
+			claudeRequest.System = Content{
+				Type: "text",
+				Text: message.StringContent(),
+				CacheControl: &CacheControl{
+					Type: "ephemeral",
+				},
+			}
 			continue
 		}
 		claudeMessage := Message{
