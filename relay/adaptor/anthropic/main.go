@@ -89,14 +89,17 @@ func ConvertRequest(textRequest model.GeneralOpenAIRequest) *Request {
 		claudeRequest.Model = "claude-2.1"
 	}
 	for _, message := range textRequest.Messages {
-		if message.Role == "system" && claudeRequest.System.Type == "" {
-			claudeRequest.System = Content{
+		if message.Role == "system" {
+			var systemContent = Content{
 				Type: "text",
 				Text: message.StringContent(),
-				CacheControl: &CacheControl{
-					Type: "ephemeral",
-				},
 			}
+			if ModelCacheControlMap[claudeRequest.Model] {
+				systemContent.CacheControl = &CacheControl{
+					Type: "ephemeral",
+				}
+			}
+			claudeRequest.System = append(claudeRequest.System, systemContent)
 			continue
 		}
 		claudeMessage := Message{
