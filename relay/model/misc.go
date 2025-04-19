@@ -6,6 +6,10 @@ type Usage struct {
 	TotalTokens      int `json:"total_tokens"`
 
 	CompletionTokensDetails *CompletionTokensDetails `json:"completion_tokens_details,omitempty"`
+
+	// claude prompt cache 消耗的tokens
+	CacheCreationInputTokens int `json:"cache_creation_input_tokens"`
+	CacheReadInputTokens     int `json:"cache_read_input_tokens"`
 }
 
 type CompletionTokensDetails struct {
