@@ -90,16 +90,37 @@ func ConvertRequest(textRequest model.GeneralOpenAIRequest) *Request {
 	}
 	for _, message := range textRequest.Messages {
 		if message.Role == "system" {
-			var systemContent = Content{
-				Type: "text",
-				Text: message.StringContent(),
-			}
-			if ModelCacheControlMap[claudeRequest.Model] {
-				systemContent.CacheControl = &CacheControl{
-					Type: "ephemeral",
+			if message.IsStringContent() {
+				systemContent := Content{
+					Type: "text",
+					Text: message.StringContent(),
+				}
+				if ModelCacheControlMap[claudeRequest.Model] {
+					systemContent.CacheControl = &CacheControl{
+						Type: "ephemeral",
+					}
+				}
+				claudeRequest.System = append(claudeRequest.System, systemContent)
+			} else {
+				// 此处是system prompt支持多个分批以及多个prompt cache
+				openaiContent := message.ParseContent()
+				fmt.Printf("openaiContent: %v\n", openaiContent)
+				for _, part := range openaiContent {
+					var systemContent Content
+					if part.Type == model.ContentTypeText {
+						systemContent = Content{
+							Type: "text",
+							Text: part.Text,
+						}
+						if ModelCacheControlMap[claudeRequest.Model] && part.CacheControl {
+							systemContent.CacheControl = &CacheControl{
+								Type: "ephemeral",
+							}
+						}
+						claudeRequest.System = append(claudeRequest.System, systemContent)
+					}
 				}
 			}
-			claudeRequest.System = append(claudeRequest.System, systemContent)
 			continue
 		}
 		claudeMessage := Message{
@@ -137,6 +158,12 @@ func ConvertRequest(textRequest model.GeneralOpenAIRequest) *Request {
 			if part.Type == model.ContentTypeText {
 				content.Type = "text"
 				content.Text = part.Text
+				// message也可支持prompt cache
+				if ModelCacheControlMap[claudeRequest.Model] && part.CacheControl {
+					content.CacheControl = &CacheControl{
+						Type: "ephemeral",
+					}
+				}
 			} else if part.Type == model.ContentTypeImageURL {
 				content.Type = "image"
 				content.Source = &ImageSource{
@@ -151,6 +178,7 @@ func ConvertRequest(textRequest model.GeneralOpenAIRequest) *Request {
 		claudeMessage.Content = contents
 		claudeRequest.Messages = append(claudeRequest.Messages, claudeMessage)
 	}
+	fmt.Printf("claudeRequest: %+v", claudeRequest)
 	return &claudeRequest
 }
 
