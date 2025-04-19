@@ -58,10 +58,14 @@ func (m Message) ParseContent() []MessageContent {
 			switch contentMap["type"] {
 			case ContentTypeText:
 				if subStr, ok := contentMap["text"].(string); ok {
-					contentList = append(contentList, MessageContent{
+					messageContent := MessageContent{
 						Type: ContentTypeText,
 						Text: subStr,
-					})
+					}
+					if cacheControl, ok := contentMap["cache_control"].(string); ok {
+						messageContent.CacheControl = cacheControl
+					}
+					contentList = append(contentList, messageContent)
 				}
 			case ContentTypeImageURL:
 				if subObj, ok := contentMap["image_url"].(map[string]any); ok {
@@ -88,4 +92,7 @@ type MessageContent struct {
 	Type     string    `json:"type,omitempty"`
 	Text     string    `json:"text"`
 	ImageURL *ImageURL `json:"image_url,omitempty"`
+
+	// For anthropic prompt cache
+	CacheControl string `json:"cache_control,omitempty"`
 }

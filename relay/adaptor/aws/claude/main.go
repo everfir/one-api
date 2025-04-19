@@ -90,9 +90,14 @@ func Handler(c *gin.Context, awsCli *bedrockruntime.Client, modelName string) (*
 	openaiResp := anthropic.ResponseClaude2OpenAI(claudeResponse)
 	openaiResp.Model = modelName
 	usage := relaymodel.Usage{
-		PromptTokens:     claudeResponse.Usage.InputTokens,
-		CompletionTokens: claudeResponse.Usage.OutputTokens,
-		TotalTokens:      claudeResponse.Usage.InputTokens + claudeResponse.Usage.OutputTokens,
+		PromptTokens:             claudeResponse.Usage.InputTokens,
+		CompletionTokens:         claudeResponse.Usage.OutputTokens,
+		CacheCreationInputTokens: claudeResponse.Usage.CacheCreationInputTokens,
+		CacheReadInputTokens:     claudeResponse.Usage.CacheReadInputTokens,
+		TotalTokens: claudeResponse.Usage.InputTokens +
+			claudeResponse.Usage.OutputTokens +
+			claudeResponse.Usage.CacheCreationInputTokens +
+			claudeResponse.Usage.CacheReadInputTokens,
 	}
 	openaiResp.Usage = usage
 
