@@ -90,16 +90,37 @@ func ConvertRequest(textRequest model.GeneralOpenAIRequest) *Request {
 	}
 	for _, message := range textRequest.Messages {
 		if message.Role == "system" {
-			var systemContent = Content{
-				Type: "text",
-				Text: message.StringContent(),
-			}
-			if ModelCacheControlMap[claudeRequest.Model] {
-				systemContent.CacheControl = &CacheControl{
-					Type: "ephemeral",
+			if message.IsStringContent() {
+				systemContent := Content{
+					Type: model.ContentTypeText,
+					Text: message.StringContent(),
+				}
+				if ModelCacheControlMap[claudeRequest.Model] {
+					systemContent.CacheControl = &CacheControl{
+						Type: "ephemeral",
+					}
+				}
+				claudeRequest.System = append(claudeRequest.System, systemContent)
+			} else {
+				// 此处是system prompt支持多个分批以及多个prompt cache
+				openaiContent := message.ParseContent()
+				fmt.Printf("openaiContent: %v\n", openaiContent)
+				for _, part := range openaiContent {
+					var systemContent Content
+					if part.Type == model.ContentTypeText {
+						systemContent = Content{
+							Type: model.ContentTypeText,
+							Text: part.Text,
+						}
+						if ModelCacheControlMap[claudeRequest.Model] && part.CacheControl != "" {
+							systemContent.CacheControl = &CacheControl{
+								Type: part.CacheControl,
+							}
+						}
+						claudeRequest.System = append(claudeRequest.System, systemContent)
+					}
 				}
 			}
-			claudeRequest.System = append(claudeRequest.System, systemContent)
 			continue
 		}
 		claudeMessage := Message{
@@ -107,7 +128,7 @@ func ConvertRequest(textRequest model.GeneralOpenAIRequest) *Request {
 		}
 		var content Content
 		if message.IsStringContent() {
-			content.Type = "text"
+			content.Type = model.ContentTypeText
 			content.Text = message.StringContent()
 			if message.Role == "tool" {
 				claudeMessage.Role = "user"
@@ -135,8 +156,14 @@ func ConvertRequest(textRequest model.GeneralOpenAIRequest) *Request {
 		for _, part := range openaiContent {
 			var content Content
 			if part.Type == model.ContentTypeText {
-				content.Type = "text"
+				content.Type = model.ContentTypeText
 				content.Text = part.Text
+				// message也可支持prompt cache
+				if ModelCacheControlMap[claudeRequest.Model] && part.CacheControl != "" {
+					content.CacheControl = &CacheControl{
+						Type: part.CacheControl,
+					}
+				}
 			} else if part.Type == model.ContentTypeImageURL {
 				content.Type = "image"
 				content.Source = &ImageSource{
@@ -151,6 +178,7 @@ func ConvertRequest(textRequest model.GeneralOpenAIRequest) *Request {
 		claudeMessage.Content = contents
 		claudeRequest.Messages = append(claudeRequest.Messages, claudeMessage)
 	}
+	fmt.Printf("claudeRequest: %+v", claudeRequest)
 	return &claudeRequest
 }
 
