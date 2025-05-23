@@ -104,7 +104,6 @@ func ConvertRequest(textRequest model.GeneralOpenAIRequest) *Request {
 			} else {
 				// 此处是system prompt支持多个分批以及多个prompt cache
 				openaiContent := message.ParseContent()
-				fmt.Printf("openaiContent: %v\n", openaiContent)
 				for _, part := range openaiContent {
 					var systemContent Content
 					if part.Type == model.ContentTypeText {
@@ -178,7 +177,6 @@ func ConvertRequest(textRequest model.GeneralOpenAIRequest) *Request {
 		claudeMessage.Content = contents
 		claudeRequest.Messages = append(claudeRequest.Messages, claudeMessage)
 	}
-	fmt.Printf("claudeRequest: %+v", claudeRequest)
 	return &claudeRequest
 }
 
